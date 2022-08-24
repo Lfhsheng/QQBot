@@ -37,14 +37,16 @@ def getMessage(ws, message):
         nameList = jsonDict["name"]
         countList = jsonDict["count"]
         dayList = jsonDict["day"]
+        '''
         try:
             day = dayList[0]
         except:
             dayList.append(datetime.today().day)
             print("添加日期")
+        '''
         try:
             index = userList.index(m["user_id"])
-            if dayList[0] != datetime.today().day:
+            if dayList[index] != datetime.today().day:
                 dayList.clear()
                 dayList.append(datetime.today().day)
                 countList[index] += 1
@@ -55,23 +57,45 @@ def getMessage(ws, message):
                 openJson.write(newJson)
                 openJson.close()
             if m["message_type"] == "private":
-                sendPrivateMessage(m["user_id"], "%s签到了%d天" % (
-                    m["sender"]["nickname"], countList[index]))
+                sendPrivateMessage(m["user_id"],"%s签到了%d天" % (m["sender"]["nickname"], countList[index]))
+            if m["message_type"] == "group":
+                sendGroupMessage(m["group_id"],"%s签到了%d天" % (m["sender"]["nickname"], countList[index]))
         except:
             userList.append(m["user_id"])
             countList.append(1)
             nameList.append(m["sender"]["nickname"])
-            createJson = {"user": userList, "name": nameList,
-                          "count": countList, "day": dayList}
+            dayList.append(datetime.today().day)
+            createJson = {"user": userList, "name": nameList,"count": countList, "day": dayList}
             newJson = json.dumps(createJson)
             openJson = open(jsonPath, "w")
             openJson.write(newJson)
             openJson.close()
-            print("not")
             if m["message_type"] == "private":
-                print("ok")
                 sendPrivateMessage(m["user_id"], "%s签到了%d天" % (m["sender"]["nickname"],1))
+            if m["message_type"] == "group":
+                sendGroupMessage(m["group_id"],"%s签到了%d天" % (m["sender"]["nickname"],1))
         return None
+    if m["message"] == ".签到板" or m["message"] == ".check board":
+        print("有人在看签到板")
+        readJson = open(jsonPath, "r")
+        jsonDict = json.load(readJson)
+        nameList = jsonDict["name"]
+        countList = jsonDict["count"]
+        tempStr = ""
+        try:
+            testName = nameList[0]
+            tempStr += "签到的人数与天数：\n"
+            for listIndex in range(0,len(nameList)):
+                tempStr += "%s签到了%d天\n" % (nameList[listIndex],countList[listIndex])
+            if m["message_type"] == "private":
+                sendPrivateMessage(m["user_id"],tempStr)
+            if m["message_type"] == "group":
+                sendGroupMessage(m["group_id"],tempStr)
+        except:
+            if m["message_type"] == "private":
+                    sendPrivateMessage(m["user_id"],"没有人签到")
+            if m["message_type"] == "group":
+                sendGroupMessage(m["group_id"],"没有人签到")
     if m["post_type"] == "message":
         flag = False
         for index in range(0, len(replyList)):
@@ -87,7 +111,7 @@ def getMessage(ws, message):
                 sendPrivateMessage(m["user_id"], "啊吧啊吧")
         '''
 if __name__ == "__main__":
-    # websocket.enableTrace(True)
+    #websocket.enableTrace(True)
     ws = websocket.WebSocketApp("ws://127.0.0.1:5701/", on_message=getMessage)
     ws.run_forever(dispatcher=rel)
     rel.signal(2, rel.abort)
