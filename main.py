@@ -47,8 +47,7 @@ def getMessage(ws, message):
         try:
             index = userList.index(m["user_id"])
             if dayList[index] != datetime.today().day:
-                dayList.clear()
-                dayList.append(datetime.today().day)
+                dayList[index] = datetime.today().day
                 countList[index] += 1
                 createJson = {"user": userList, "name": nameList,
                               "count": countList, "day": dayList}
@@ -84,9 +83,9 @@ def getMessage(ws, message):
         tempStr = ""
         try:
             testName = nameList[0]
-            tempStr += "签到的人数与天数：\n"
+            tempStr += "签到的人数与天数："
             for listIndex in range(0,len(nameList)):
-                tempStr += "%s签到了%d天\n" % (nameList[listIndex],countList[listIndex])
+                tempStr += "\n%s签到了%d天" % (nameList[listIndex],countList[listIndex])
             if m["message_type"] == "private":
                 sendPrivateMessage(m["user_id"],tempStr)
             if m["message_type"] == "group":
